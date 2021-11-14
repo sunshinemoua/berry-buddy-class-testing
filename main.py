@@ -6,27 +6,42 @@ con = sl.connect("berries.db")
 
 # sql = 'INSERT INTO BERRY (id, name, description) values(?, ?, ?)'
 # data = [
-#     (2, 'Coffeeberry', """California coffeeberry is a member of the Buckthorn family
-# (Rhamnaceae). There are fifty to fifty-two genera of the
-# Buckthorn family worldwide, with about 950 species.
-# There are fifty species of the Frangula genus, with three
-# species found in California. Aside from the two species listed
-# above, there is Frangula rubra, or Sierra coffeeberry.
-# Description: F. californica and its six subspecies are most
-# common in Southern California; F. purshiana and its three
-# subspecies are found more commonly in the northern part of
-# California. These are small shrubs to large trees, depending on
-# location and species. F. californica is typically no more than
-# 8 feet tall, whereas F. purshiana is significantly taller, very
-# treelike. The leaves are alternately arranged, an inch or two
-# in length, typically bright green, narrowly oblong, with tiny
-# teeth on the margins."""),
-#     (3, 'Elderberry', """The elderberry is a member of the Muskroot family(Adoxaceae). This family has five genera and about 200
-# species worldwide. Only two of the genera are represented
-# in California, one of which is Sambucus. There are twenty
-# species of Sambucus worldwide, and according to the
-# latest classification, you'll find four types of elderberries in
-# California."""),
+#     (11, 'Raspberry', """Raspberries are members of the Rose family
+# (Rosacea). The Rose family contains 110 genera and 3,000
+# species worldwide. Species from forty-five of the genera are
+# found in California. Raspberries belong to
+# the Rubus genus, and there are 400 to 750 species of Rubus
+# worldwide. There are eleven species of Rubus in California (not
+# including varieties)."""),
+#     (12, 'Serviceberry', """Serviceberry is a large shrub or small tree with
+# deciduous leaves, often forming in dense thickets. The twigs
+# of this native are glabrous, and the leaf is elliptical to round,
+# with obvious serrations, generally serrated above the middle
+# of the leaf. The flowers are five-petaled, white, fragrant, in
+# clusters of a few to many. The fruit is a pome of two
+# to five papery segments, berrylike, generally spherical, and
+# bluish black in color."""),
+#     (13, 'Strawberry', """If you've grown strawberries in your yard, you
+# will recognize these three wild strawberries. The leaves are
+# all basal, generally three-lobed, with each leaflet having fine
+# teeth. It looks just the strawberry you grow in your garden,
+# but smaller.
+# Technically, the strawberry is an aggregate accessory fruit,
+# meaning that the fleshy part is derived not from the plant's
+# ovaries, but from the receptacle that holds the ovaries. In
+# other words, what we call "the fruit" (because duh!, it looks
+# like a fruit) is the receptacle, and all the little seeds on the
+# outside of the "fruit" are technically referred to as achenes,
+# actually one of the ovaries of the flower with a seed inside it."""),
+#     (14, 'Toyon', """Toyon can grow to be a medium-size tree, and
+# is probably most conspicuous in the winter when it's covered
+# with clusters of orange-red fruits. The tree is found in the
+# chaparral zones, and often planted on the fringes of the
+# urban areas. The leaves are leathery and ovate, with toothed
+# margins. The tree is evergreen and can be a large bush or a
+# small tree. Each flower, which forms in the summer, is white
+# and five-petaled, about ¼ inch wide. The clusters of orange-
+# red fruit ripen from about November into January.""")
 # ]
 #
 # with con:
@@ -76,13 +91,10 @@ class tkinterApp(tk.Tk):
 
     # to display the current frame passed as
     # parameter
-    def show_frame(self, cont, n=None):
+    # cont is the name of the frame we want to show
+    def show_frame(self, cont):
         frame = self.frames[cont]
-        self.argumentName = n
         frame.tkraise()
-        if n:
-            frame.arg = n
-
 
 # first window frame startpage
 
@@ -95,6 +107,8 @@ class StartPage(tk.Frame):
 
         # label of frame Layout 2
         label = ttk.Label(self, text="Berry Buddy Catalog", font=LARGEFONT)
+        label2 = ttk.Label(self, text="")
+        label3 = ttk.Label(self, text="")
 
         # putting the grid in its place by using
         # grid
@@ -104,13 +118,17 @@ class StartPage(tk.Frame):
         def update(data):
             # Clear the listbox so it can reset each time a new berry is entered
             myList.delete("0", "end")
-            # Add berried top listbox
+            # Add berries top listbox
+            # enumerate allows us to get the index
+            # loop goes through the list of berries in the box
             for i, item in enumerate(data):
+                # i is the index and item is the berry itself
                 myList.insert(i, item)
 
-        def destroyAll(label2, label3):
-            label2.destroy()
-            label3.destroy()
+        def resetLabelText():
+            label2.config(text='')
+            label3.config(text='')
+
 
         # Update entry box with listbox clicked
         def fillout(event):
@@ -122,16 +140,17 @@ class StartPage(tk.Frame):
             global BERRY_NAME
             BERRY_NAME = myEntry.get()
             if BERRY_NAME in berryNames:
-                label2 = ttk.Label(self, text=myEntry.get(), font=LARGEFONT)
-                label2.grid(row=1, column=5, padx=10, pady=10)
                 with con:
                     data = con.execute(f"SELECT * FROM BERRY WHERE name == '{myEntry.get()}'")
                     result = data.fetchone()
                     if result:
-                        label3 = ttk.Label(self, text=result[2])
+                        label2.grid(row=1, column=5, padx=10, pady=10)
+                        label2.config(text=result[1])
+                        label3.config(text=result[2])
                         label3.grid(row=1, column=6, padx=5, pady=5)
-                button2 = ttk.Button(self, text="Quit", command=lambda: destroyAll(label2, label3))
-                button2.grid(row=1, column=7, padx=10, pady=10)
+                        # breaking... come back to fix because it is not destroying the labels, instead it is overlapping
+                        button2 = ttk.Button(self, text="Quit", command=lambda: resetLabelText())
+                        button2.grid(row=1, column=7, padx=10, pady=10)
 
         # # Create function to check entry vs listbox
         def check(event):
@@ -158,8 +177,8 @@ class StartPage(tk.Frame):
         myList.grid(row=2, column=4, padx=10, pady=40)
         #
         # Create a list of berries
-        berryNames = ['Coffeeberry', 'Gooseberry', 'Elderberry', 'Wild Grape', 'Ground Cherry',
-                      'Huckleberry']
+        berryNames = ['Gooseberry', 'Coffeeberry', 'Elderberry', 'Wild Grape', 'Cherry', 'Currant', 'Ground Cherry', 'Huckleberry',
+                      'Juniper', 'Nightshade', 'Raspberry', 'Serviceberry', 'Strawberry', 'Toyon']
         #
         # # Add berryNames to list
         update(berryNames)
@@ -182,7 +201,7 @@ class StartPage(tk.Frame):
 
 # WE ARE WORKING ON THIS PART 1
 class Berry(tk.Frame):
-    def __init__(self, parent, controller, pages, attr=None):
+    def __init__(self, parent, controller, pages):
         tk.Frame.__init__(self, parent)
         self.pages = pages
         self.controller = controller
